@@ -1,0 +1,728 @@
+/**
+ * Commonwealth Career Co-Pilot — NEOGOV / PA Jobs Extractor & Auto-Fill Bookmarklet
+ * Version: 2.0.0 (Public Release — Hardened against DOM XSS, platform-neutral UI, expanded Work History detection)
+ * License: MIT
+ */
+javascript:(async function() {
+  const u = window.location.href;
+  if (!u.includes("governmentjobs.com") && !u.includes("pa.gov")) {
+    window.open("https://www.governmentjobs.com/careers/pabureau", "_blank");
+    return;
+  }
+  const mId = "jc-job-modal";
+  const oId = "jc-job-overlay";
+  const closeModal = () => {
+    document.getElementById(mId)?.remove();
+    document.getElementById(oId)?.remove();
+  };
+
+  /* Security hardening: HTML entity escaping for all scraped page content */
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    "\"": "&quot;",
+    "'": "&#39;"
+  }[c]));
+
+  const el = (tag, html, parent, attributes) => {
+    const e = document.createElement(tag);
+    if (html) e.innerHTML = html;
+    if (attributes) {
+      for (const [k, v] of Object.entries(attributes)) {
+        k === "class" ? (e.className = v) : e.setAttribute(k, v);
+      }
+    }
+    if (parent) parent.appendChild(e);
+    return e;
+  };
+
+  const elTxt = (tag, text, parent, attributes) => {
+    const e = el(tag, "", parent, attributes);
+    if (text !== undefined && text !== null) e.textContent = String(text);
+    return e;
+  };
+
+  const norm = (s) => (s || "").replace(/\s+/g, " ").trim();
+  const trunc = (s, n) => (s.length > n ? s.substring(0, n) + "..." : s);
+
+  const getT = (selectors, context = document) => {
+    for (const s of selectors) {
+      try {
+        const n = context.querySelector(s);
+        if (n && n.textContent) return norm(n.textContent);
+      } catch (e) {}
+    }
+    return "";
+  };
+
+  const copyText = async (payload) => {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      try {
+        await navigator.clipboard.writeText(payload);
+        return true;
+      } catch (e) {}
+    }
+    const ta = document.createElement("textarea");
+    ta.value = payload;
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    let ok = false;
+    try { ok = document.execCommand("copy"); } catch (e) {}
+    ta.remove();
+    return ok;
+  };
+
+  const fetchDOM = async (url) => {
+    const res = await fetch(url);
+    const html = await res.text();
+    return new DOMParser().parseFromString(html, "text/html");
+  };
+
+  const getJobId = (url) => {
+    const m = url.match(/\/jobs\/(\d+)/);
+    return m ? m[1] : url;
+  };
+
+  const LABEL_KEY = "jc_job_labels_v1";
+  const loadLabelStore = () => {
+    try {
+      const s = JSON.parse(localStorage.getItem(LABEL_KEY));
+      return (s && s.jobs) ? s : { counter: 0, jobs: {} };
+    } catch (e) {
+      return { counter: 0, jobs: {} };
+    }
+  };
+  const saveLabelStore = (store) => {
+    try { localStorage.setItem(LABEL_KEY, JSON.stringify(store)); } catch (e) {}
+  };
+  const assignLabels = (jobs) => {
+    const store = loadLabelStore();
+    const now = Date.now();
+    jobs.forEach(j => {
+      const existing = store.jobs[j.jobId];
+      if (existing) {
+        existing.lastSeen = now;
+        existing.title = j.title;
+      } else {
+        store.counter++;
+        store.jobs[j.jobId] = { label: store.counter, title: j.title, url: j.url, lastSeen: now };
+      }
+    });
+    saveLabelStore(store);
+    return store;
+  };
+  const gcLabelStore = (seenJobIds) => {
+    const store = loadLabelStore();
+    Object.keys(store.jobs).forEach(id => {
+      if (!seenJobIds.has(id)) delete store.jobs[id];
+    });
+    saveLabelStore(store);
+  };
+
+  const css = `:root{--p:#0284c7;--bg:#fff;--t:#1f2937;--b:#e5e7eb;--s:#10b981}@keyframes i{from{opacity:0}to{opacity:1}}@keyframes u{from{transform:translate(-50%,-45%);opacity:0}to{transform:translate(-50%,-50%);opacity:1}}@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(16,185,129,.4)}70%{box-shadow:0 0 0 6px rgba(16,185,129,0)}100%{box-shadow:0 0 0 0 rgba(16,185,129,0)}}.jc-overlay{position:fixed;inset:0;background:rgba(15,23,42,.75);z-index:99998;animation:i .2s}.jc-modal{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--bg);padding:24px;width:650px;max-width:90vw;border-radius:12px;z-index:99999;box-shadow:0 20px 25px -5px rgba(0,0,0,.1);font-family:system-ui;display:flex;flex-direction:column;gap:16px;color:var(--t);animation:u .3s;max-height:90vh;overflow:hidden}.jc-header{margin:0;font-size:20px;font-weight:700;text-align:center;color:var(--p)}.jc-flex-col{display:flex;flex-direction:column;flex:1;min-height:0;gap:12px}.jc-textarea{width:100%;padding:12px;border:1px solid var(--b);border-radius:6px;font-size:13px;box-sizing:border-box;resize:vertical;min-height:280px;font-family:monospace;background:#f9fafb}.jc-textarea:focus{outline:none;border-color:var(--p)}.jc-textarea:focus-visible{outline:none;box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--p)}.jc-actions{display:flex;gap:10px;justify-content:space-between;border-top:1px solid var(--b);padding-top:16px;flex-shrink:0}.jc-btn{padding:10px 16px;border-radius:6px;font-weight:600;font-size:14px;cursor:pointer;border:1px solid transparent;transition:all .3s ease-in-out}.jc-btn:active{transform:scale(0.95)}.jc-btn:focus-visible{outline:none;box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--p)}.jc-btn-primary{background:var(--p);color:#fff}.jc-btn-ghost{background:0 0;color:#6b7280}.jc-btn-success{background:var(--s);color:#fff}.ai-filled{border:2px solid var(--s)!important;animation:pulse 1.2s ease-out 2 forwards;position:relative}.ai-badge{position:absolute;top:-10px;right:-10px;background:var(--s);color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;z-index:100;pointer-events:none}.jc-scroll-list{overflow-y:auto;flex:1;min-height:200px;border:1px solid var(--b);border-radius:8px;background:#f8fafc;padding:12px}.jc-list-item{background:#fff;border:1px solid var(--b);border-radius:6px;padding:12px;margin-bottom:12px}.jc-item-title{font-size:15px;font-weight:700;color:#0284c7;text-decoration:none;display:block;margin-bottom:4px}.jc-item-meta{font-size:11px;font-weight:600;color:#64748b;margin-bottom:8px;text-transform:uppercase}.jc-item-snippet{font-size:13px;color:#334155;line-height:1.5;padding:8px;background:#f1f5f9;border-left:3px solid var(--p);border-radius:4px}.jc-progress{font-size:16px;font-weight:600;text-align:center;color:var(--p);padding:40px}.jc-toggles{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}.jc-pill{padding:6px 14px;border-radius:99px;border:1px solid var(--b);cursor:pointer;font-size:13px;font-weight:600;user-select:none;transition:all .3s ease-in-out}.jc-pill:active{transform:scale(0.95)}.jc-pill:focus-visible{outline:none;box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--p)}.jc-pill[data-active="true"]{background:var(--p);color:#fff;border-color:var(--p)}`;
+
+  const initUI = (title, headerText, contentNode, getCopyPayload, extraButtons = []) => {
+    if (!document.getElementById("jc-styles")) {
+      el("style", css, document.head, { id: "jc-styles" });
+    }
+    closeModal();
+    el("div", "", document.body, { id: oId, class: "jc-overlay" }).onclick = closeModal;
+    const mo = el("div", "", document.body, { id: mId, class: "jc-modal" });
+    elTxt("h2", title, mo, { class: "jc-header" });
+    if (headerText) elTxt("div", headerText, mo, { style: "font-size:13px;text-align:center;color:#4b5563;font-weight:600" });
+    mo.appendChild(contentNode);
+    const act = el("div", "", mo, { class: "jc-actions" });
+    if (getCopyPayload) {
+      const cp = elTxt("button", "Copy Payload", act, { class: "jc-btn jc-btn-primary" });
+      cp.onclick = async () => {
+        const payload = getCopyPayload();
+        if (!payload) {
+          alert("Clipboard payload is empty.");
+          return;
+        }
+        const ok = await copyText(payload);
+        if (ok) {
+          cp.textContent = "Copied to Clipboard!";
+          cp.classList.add("jc-btn-success");
+          setTimeout(() => {
+            cp.textContent = "Copy Payload";
+            cp.classList.remove("jc-btn-success");
+          }, 1600);
+        } else {
+          alert("Clipboard permission denied. Please select the text box and press Ctrl+C / Cmd+C.");
+        }
+      };
+    }
+    extraButtons.forEach(b => {
+      const btn = elTxt("button", b.text, act, { class: "jc-btn " + (b.class || "jc-btn-primary") });
+      btn.onclick = () => b.action(mo);
+    });
+    elTxt("button", "Close", act, { class: "jc-btn jc-btn-ghost" }).onclick = closeModal;
+    return mo;
+  };
+
+  const Ext = {
+    RX_REMOTE: /telework|home headquartered|remote/i,
+    RX_SCHEDULE: /(?:Work Schedule and Additional Information:|Work Schedule:)[\s\S]*?(?=REQUIRED EXPERIENCE|QUALIFICATIONS|How to Apply:)/is,
+    RX_REQUIREMENTS: /(?:QUALIFICATIONS|Minimum Experience)[\s\S]*?(?=How to Apply:|EXAMINATION INFORMATION|Veterans:|Telecommunications Relay)/is,
+    RX_DUTIES: /Description of Work[\s\S]*?(?=Work Schedule)/is,
+    cln(h) {
+      let c = (h || "").replace(/<br\s*\/?>/gi, "\n").replace(/<\/p>|<\/div>|<\/h[1-6]>/gi, "\n\n").replace(/<\/li>/gi, "\n");
+      const d = new DOMParser().parseFromString(c, "text/html");
+      return (d.body.textContent || "").replace(/[ \t]+/g, " ").replace(/\n{3,}/g, "\n\n").trim();
+    },
+    q(context = document) {
+      const sQ = new Set();
+      return Array.prototype.reduce.call(context.querySelectorAll(".question-item"), (acc, q) => {
+        const nEl = q.querySelector(".question-index, .span2");
+        const rawT = nEl ? norm(nEl.textContent) : "";
+        const qKey = "Q" + String(rawT || acc.length + 1).padStart(2, "0");
+        if (sQ.has(qKey)) return acc;
+        sQ.add(qKey);
+        const tEl = q.querySelector(".question-container > span, .question-text span, .question-text label");
+        const t = tEl ? norm(this.cln(tEl.innerHTML)) : "";
+        if (!t) return acc;
+        const ops = Array.prototype.reduce.call(q.querySelectorAll("ul > li, .radio-set label, select option"), (o, l) => {
+          const txt = norm(l.textContent);
+          if (txt && !/Select one|Choose option/.test(txt) && !o.includes(txt)) o.push(txt);
+          return o;
+        }, []);
+        acc.push(qKey + ": " + t + (ops.length ? "\n - " + ops.join("\n - ") : ""));
+        return acc;
+      }, []).join("\n\n");
+    },
+    padQ(qNum) {
+      return "Q" + String(qNum).padStart(2, "0");
+    },
+    getQNum(qEl, idx) {
+      const idxNode = qEl.querySelector(".question-index, .span2");
+      return idxNode ? parseInt(idxNode.textContent.trim(), 10) : (idx + 1);
+    },
+    getQKey(qEl, idx) {
+      return this.padQ(this.getQNum(qEl, idx));
+    },
+    getQText(qEl, fallback = "") {
+      const tEl = qEl.querySelector(".question-container > span, .question-text span, .question-text label");
+      return tEl ? norm(this.cln(tEl.innerHTML)) : fallback;
+    },
+    san(txt) {
+      if (!txt) return "";
+      return txt.replace(/[\u2018\u2019]|[\u201C\u201D]|[\u2013\u2014]|[\u00A0 \t]+/g, (m) => {
+        if (m === "\u2018" || m === "\u2019") return "'";
+        if (m === "\u201C" || m === "\u201D") return "\"";
+        if (m === "\u2013" || m === "\u2014") return "-";
+        return " ";
+      });
+    },
+    getSanitizedAnswer(data, qKey) {
+      const ans = data[qKey];
+      return (ans && ans.trim()) ? this.san(ans) : null;
+    },
+    injAns(qEl, fAns) {
+      let inj = 0;
+      const taNat = qEl.querySelector("textarea, input[type='text']");
+      if (taNat) {
+        taNat.value = fAns;
+        taNat.dispatchEvent(new Event("input", { bubbles: true }));
+        taNat.dispatchEvent(new Event("change", { bubbles: true }));
+        taNat.classList.add("ai-filled");
+        if (!taNat.parentElement.querySelector(".ai-badge")) elTxt("div", "⚡ AI", taNat.parentElement, { class: "ai-badge" });
+        inj++;
+      } else {
+        const opts = Array.from(qEl.querySelectorAll("label, option"));
+        const tgt = opts.find(o => o.textContent.trim().toLowerCase().startsWith(fAns.toLowerCase().substring(0, 25)));
+        if (tgt) {
+          if (tgt.tagName === "OPTION") {
+            tgt.selected = true;
+            tgt.parentElement.dispatchEvent(new Event("change", { bubbles: true }));
+            tgt.parentElement.classList.add("ai-filled");
+          } else {
+            const inp = tgt.querySelector("input") || document.getElementById(tgt.getAttribute("for"));
+            if (inp) {
+              inp.click();
+              inp.dispatchEvent(new Event("change", { bubbles: true }));
+              tgt.classList.add("ai-filled");
+              if (!tgt.querySelector(".ai-badge-inline")) elTxt("span", " ⚡ AI", tgt, { class: "ai-badge-inline", style: "color:var(--s);font-weight:700;margin-left:6px;font-size:11px;" });
+            }
+          }
+          inj++;
+        }
+      }
+      return inj;
+    },
+    getMeta(context) {
+      return Array.prototype.reduce.call(context.querySelectorAll(".term-block, dt"), (m, elNode) => {
+        const isDt = elNode.tagName === "DT";
+        const lEl = isDt ? elNode : elNode.querySelector(".term-description");
+        const nxt = elNode.nextElementSibling;
+        const vEl = isDt ? (nxt?.tagName === "DD" ? nxt : null) : elNode.querySelector(".span8");
+        if (lEl && vEl) {
+          const l = norm(lEl.textContent.replace("Location Information Icon", ""));
+          m[l] = norm(vEl.textContent);
+        }
+        return m;
+      }, {});
+    },
+    d() {
+      let t = getT(["h1.t-24", ".jobsearch-JobInfoHeader-title", ".entity-title", "h1.title", "h1"]) || "[Title]";
+      let c = getT([".job-details-jobs-unified-top-card__company-name", ".agency-name dd", ".company-name"]) || "Commonwealth of Pennsylvania";
+      let meta = this.getMeta(document);
+      let s = meta["Salary"] || getT([".salary", ".pay-range", ".job-details-jobs-unified-top-card__job-insight"]);
+      let ds = this.cln(document.querySelector("#details-info")?.innerHTML || "");
+      return { t, c, s, meta, ds, q: this.q() };
+    },
+    w(context = document) {
+      let exp = [];
+      const wCtx = context.querySelector(".work-tab") || context;
+      wCtx.querySelectorAll("li dl, .box-container dl").forEach(dl => {
+        let title = "", employer = "", duties = "", dates = "", isWork = false;
+        dl.querySelectorAll("dt").forEach(dt => {
+          let label = norm(dt.textContent).toLowerCase();
+          let dd = dt.nextElementSibling;
+          if (dd && dd.tagName === "DD") {
+            let val = norm(dd.textContent);
+            if (label.includes("position")) { title = val; isWork = true; }
+            else if (label.includes("company") || label.includes("employer") || label.includes("agency")) { employer = val; isWork = true; }
+            else if (label.includes("duties")) duties = val;
+            else if (label.includes("dates")) dates = val;
+          }
+        });
+        if (isWork && (title || employer)) {
+          let md = "### " + (title || "Unknown Title") + "\n**Employer:** " + (employer || "Unknown Employer");
+          if (dates && dates !== " - ") md += "\n**Dates:** " + dates.replace(/( - )/g, " - ").replace(/\s+/g, " ");
+          md += "\n**Duties:**\n" + (duties || "No description provided.");
+          exp.push(md);
+        }
+      });
+      if (exp.length === 0) {
+        let blocks = wCtx.querySelectorAll(".experience-block, .work-item, .list-item, fieldset, .card");
+        if (blocks.length === 0) blocks = [wCtx];
+        const getVal = (txtSel, inpSel, ctx) => getT(txtSel, ctx) || ctx.querySelector(inpSel)?.value || "";
+        exp = Array.prototype.reduce.call(blocks, (acc, b) => {
+          let t = getVal(['[data-automation-id="job-title"]', ".job-title"],
+            'input[name*="jobTitle" i], input[name*="title" i], input[id*="title" i]', b);
+          let e = getVal(['[data-automation-id="company"]', ".employer-name", ".company"],
+            'input[name*="employer" i], input[name*="company" i], input[id*="employer" i]', b);
+          let d = getVal(['[data-automation-id="duties"]', ".duties", ".description"],
+            'textarea[name*="duties" i], textarea[name*="description" i], textarea[id*="duties" i], textarea', b);
+          if ((t || e) && t.length <= 100 && e.length <= 100) {
+            acc.push("### " + (t || "Unknown Title") + "\n**Employer:** " +
+              (e || "Unknown Employer") + "\n**Duties:**\n" + (d || "No description provided."));
+          }
+          return acc;
+        }, exp);
+      }
+      return exp.length ? [...new Set(exp)].join("\n\n---\n\n") : null;
+    },
+    async l(options, cb) {
+      let rx = null;
+      if (options.kw) {
+        try {
+          rx = new RegExp(options.kw, "i");
+        } catch (e) {
+          rx = new RegExp(options.kw.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&"), "i");
+        }
+      }
+      let jobLinks = new Map();
+      const sleep = ms => new Promise(r => setTimeout(r, ms));
+      const scrapeCurrent = () => {
+        document.querySelectorAll(".list-item .item-details-link").forEach(a => {
+          let hr = a.getAttribute("href");
+          if (hr) jobLinks.set(hr, norm(a.textContent) || "Unknown");
+        });
+      };
+      scrapeCurrent();
+      let pNum = 1;
+      const getNext = () => {
+        let btn = document.querySelector("li.PagedList-skipToNext a");
+        return (btn && !btn.parentElement.classList.contains("disabled") && btn.getAttribute("aria-disabled") !== "true") ? btn : null;
+      };
+      let nextBtn = getNext();
+      while (nextBtn && pNum < options.maxP) {
+        pNum++;
+        cb(0, 0, "Traversing Page " + pNum + "...");
+        nextBtn.click();
+        await sleep(2500);
+        scrapeCurrent();
+        nextBtn = getNext();
+      }
+      const reachedEnd = !nextBtn;
+      let jobsArray = Array.from(jobLinks.entries(), ([hr, ti]) => ({ ti, hr }));
+      const m = [];
+      let processed = 0;
+      const chunkSize = 4;
+      for (let i = 0; i < jobsArray.length; i += chunkSize) {
+        const chunk = jobsArray.slice(i, i + chunkSize);
+        await Promise.all(chunk.map(async (job) => {
+          const ln = job.hr.startsWith("http") ? job.hr : window.location.origin + job.hr;
+          try {
+            const dc = await fetchDOM(ln);
+            let pageMeta = this.getMeta(dc);
+            let pg = pageMeta["Pay Group"] || "N/A";
+            let jt = pageMeta["Job Type"] || "N/A";
+            if (options.exLG && pg.toUpperCase().includes("LG")) return;
+            if (options.exSeas && (jt.toLowerCase().includes("seasonal") || jt.toLowerCase().includes("temporary"))) return;
+            let tp = Array.prototype.reduce.call(dc.querySelectorAll(".tab-pane"), (acc, p) =>
+              (p.id !== "details-questions" && p.id !== "details-benefits" ? acc + p.innerHTML + "<br><br>" : acc),
+            "");
+            const cln = this.cln(tp);
+            let isRemote = this.RX_REMOTE.test(cln) || /home headquartered/i.test(pageMeta["Location"] || "") || /home headquartered/i.test(pg);
+            if (options.exNonRemote && !isRemote) return;
+            if (!rx || rx.test(cln)) {
+              let kwSnip = "";
+              if (rx) {
+                let match = cln.match(rx);
+                if (match) {
+                  let start = Math.max(0, match.index - 80);
+                  let end = Math.min(cln.length, match.index + 150);
+                  kwSnip = "..." + cln.substring(start, end).replace(/\n/g, " ").trim() + "...";
+                }
+              }
+
+              let schSnippet = "Not specified";
+              let fullSchedule = "Not specified";
+              let schMatch = cln.match(this.RX_SCHEDULE);
+              if (schMatch) {
+                fullSchedule = schMatch[0].trim();
+                schSnippet = trunc(norm(schMatch[0]), 300);
+              }
+
+              let reqSnippet = "N/A";
+              let fullReq = "N/A";
+              let reqMatch = cln.match(this.RX_REQUIREMENTS);
+              if (reqMatch) {
+                fullReq = reqMatch[0].trim();
+                reqSnippet = trunc(norm(reqMatch[0]), 3000);
+              }
+
+              let dutiesMatch = cln.match(this.RX_DUTIES);
+              let fullDuties = dutiesMatch ? dutiesMatch[0].trim() : this.cln(dc.querySelector("#details-info")?.innerHTML || "").trim();
+              let coreDuties = trunc(norm(fullDuties), 500);
+
+              let questions = this.q(dc);
+
+              m.push({
+                jobId: getJobId(ln),
+                ti: job.ti,
+                ln,
+                pg,
+                sal: pageMeta["Salary"] || "N/A",
+                jt,
+                loc: pageMeta["Location"] || pageMeta["City"] || "N/A",
+                un: pageMeta["Union"] || "N/A",
+                dep: pageMeta["Department"] || "N/A",
+                div: pageMeta["Division"] || "N/A",
+                close: pageMeta["Closing Date"] || "N/A",
+                cn: pageMeta["Contact Name"] || "N/A",
+                ce: pageMeta["Contact Email"] || "N/A",
+                schedule: schSnippet,
+                fullSchedule,
+                reqSnippet,
+                fullReq,
+                coreDuties,
+                fullDuties,
+                questions,
+                kwSnip
+              });
+            }
+          } catch (e) {}
+          processed++;
+          cb(processed, jobsArray.length, job.ti);
+        }));
+      }
+      try {
+        let p1 = document.querySelector('a[aria-label="Go to Page 1"]');
+        if (p1) p1.click();
+      } catch (e) {}
+      const allJobIds = jobsArray.map(j => getJobId(j.hr.startsWith("http") ? j.hr : window.location.origin + j.hr));
+      return { tot: jobsArray.length, m, reachedEnd, allJobIds };
+    }
+  };
+
+  const autoResize = (ta) => {
+    ta.style.height = "auto";
+    ta.style.height = (ta.scrollHeight + 5) + "px";
+  };
+
+  const attachAutoResize = (ta, delay = 500) => {
+    ta.style.overflow = "hidden";
+    const rsz = () => autoResize(ta);
+    ta.addEventListener("input", rsz);
+    setTimeout(rsz, delay);
+  };
+
+  document.querySelectorAll("textarea:not(.jc-textarea)").forEach(ta => {
+    if (!ta.dataset.jcr) {
+      ta.dataset.jcr = "1";
+      ta.style.minHeight = "80px";
+      attachAutoResize(ta);
+    }
+  });
+
+  const buildScanPayload = (dt) => {
+    return "### ENHANCED VIABILITY SCAN\nFound " + dt.m.length + " matching jobs. Reference each one by its # label.\n\n" + dt.m.map(m => {
+      let res = "**#" + m.label + " - " + m.ti + "**\n* **Link:** " + m.ln + "\n* **Meta:** " + m.pg + " | " + m.sal + " | " + m.jt + " | " + m.loc + " | " + m.un + "\n* **Agency:** " + m.dep + " / " + m.div + "\n* **Deadline:** " + m.close + " | **Contact:** " + m.cn + " - " + m.ce + "\n* **Schedule/Loc:** \"" + m.schedule + "\"\n* **Requirements:** \"" + m.reqSnippet + "\"\n* **Core Duties:** \"" + m.coreDuties + "\"";
+      if (m.kwSnip) res += "\n* **Keyword Snippet:** \"" + m.kwSnip + "\"";
+      return res;
+    }).join("\n\n---\n\n");
+  };
+
+  const buildJobDetailPayload = (m) => {
+    return "### JOB DETAIL - #" + m.label + "\n**Title:** " + m.ti + "\n**Link:** " + m.ln +
+      "\n**Meta:** " + m.pg + " | " + m.sal + " | " + m.jt + " | " + m.loc + " | " + m.un +
+      "\n**Agency:** " + m.dep + " / " + m.div + "\n**Deadline:** " + m.close + " | **Contact:** " + m.cn + " - " + m.ce +
+      "\n**Schedule/Loc:** " + m.fullSchedule +
+      "\n\n### DESCRIPTION\n" + m.fullDuties +
+      "\n\n### REQUIREMENTS\n" + m.fullReq +
+      (m.questions ? "\n\n### APPLICATION QUESTIONS\n" + m.questions : "");
+  };
+
+  /* Hardened: all scraped job strings are HTML-escaped via esc() before rendering */
+  const showJobDetail = (m, dt) => {
+    const c = el("div", "", null, { class: "jc-scroll-list", style: "white-space:pre-wrap;font-size:13px;line-height:1.6;" });
+    c.innerHTML =
+      "<div style='margin-bottom:14px;'><strong>" + esc(m.pg) + " | " + esc(m.sal) + "</strong><br>" + esc(m.jt) + " | " + esc(m.loc) + " | " + esc(m.un) + "<br>" + esc(m.dep) + " / " + esc(m.div) + "<br>Closes: " + esc(m.close) + " | Contact: " + esc(m.cn) + " - " + esc(m.ce) + "</div>" +
+      "<div style='margin-bottom:14px;'><strong>Schedule/Loc</strong><br>" + esc(m.fullSchedule) + "</div>" +
+      "<div style='margin-bottom:14px;'><strong>Description</strong><br>" + esc(m.fullDuties) + "</div>" +
+      "<div style='margin-bottom:14px;'><strong>Requirements</strong><br>" + esc(m.fullReq) + "</div>" +
+      (m.questions ? "<div><strong>Application Questions</strong><br>" + esc(m.questions) + "</div>" : "");
+    initUI("#" + m.label + " - " + m.ti, null, c, () => buildJobDetailPayload(m), [
+      { text: "Back to Results", action: () => renderResultsList(dt) }
+    ]);
+  };
+
+  const renderResultsList = (dt) => {
+    const listC = el("div", "", null, { class: "jc-scroll-list" });
+    if (!dt.m.length) {
+      elTxt("div", "No matches detected.", listC, { style: "text-align:center;padding:40px" });
+    } else {
+      dt.m.forEach(m => {
+        const i = el("div", "", listC, { class: "jc-list-item" });
+        const titleRow = el("div", "", i, { style: "display:flex;justify-content:space-between;align-items:flex-start;gap:8px;" });
+        const safeHref = /^https?:\/\//i.test(m.ln) ? m.ln : "#";
+        elTxt("a", "#" + m.label + " - " + m.ti, titleRow, { class: "jc-item-title", href: safeHref, target: "_blank", rel: "noopener noreferrer", style: "flex:1;" });
+        const expBtn = elTxt("button", "Expand", titleRow, { class: "jc-btn jc-btn-ghost", style: "padding:4px 10px;font-size:12px;flex-shrink:0;" });
+        expBtn.onclick = () => showJobDetail(m, dt);
+        elTxt("div", m.pg + " | " + m.sal, i, { class: "jc-item-meta" });
+        el("div", "<strong>Schedule/Loc:</strong> " + esc(m.schedule), i, { style: "font-size:12px;color:#059669;margin-bottom:4px;" });
+        if (m.reqSnippet) el("div", "<strong>Reqs:</strong> " + esc(m.reqSnippet), i, { style: "font-size:12px;color:#475569;margin-bottom:4px;" });
+        if (m.kwSnip) el("div", "<strong>Keyword:</strong> <span style=\"background:#fef08a;padding:2px 4px;border-radius:2px;\">" + esc(m.kwSnip) + "</span>", i, { style: "font-size:12px;color:#854d0e;margin-top:4px;" });
+      });
+    }
+    const hdTxt = dt.m.length ? "Found " + dt.m.length + " jobs (out of " + dt.tot + ")" : "No jobs found (out of " + dt.tot + ").";
+    initUI("Scan Results", hdTxt, listC, () => buildScanPayload(dt));
+  };
+
+  const verifyPayload = (jsonStr, modal) => {
+    try {
+      const data = JSON.parse(jsonStr);
+      modal.innerHTML = "";
+      elTxt("h2", "Verify Application Payload", modal, { class: "jc-header" });
+      const listC = el("div", "", modal, { class: "jc-scroll-list", style: "display:flex;flex-direction:column;gap:16px;" });
+      const qNodes = Array.from(document.querySelectorAll(".supplementary-questions .question-item, .box .question-item"));
+      let mCount = 0;
+      const vState = [];
+      const seen = new Set();
+
+      qNodes.forEach((qEl, idx) => {
+        const qNum = Ext.getQNum(qEl, idx);
+        const qKey = Ext.padQ(qNum);
+        if (seen.has(qKey)) return;
+        seen.add(qKey);
+
+        const ans = Ext.getSanitizedAnswer(data, qKey);
+        if (!ans) return;
+        mCount++;
+
+        const txt = Ext.getQText(qEl, "Question " + qNum);
+        const iBox = el("div", "", listC, { style: "background:#fff;padding:12px;border:1px solid var(--b);border-radius:6px;" });
+        el("div", "<strong>" + esc(qKey) + "</strong>: " + esc(txt), iBox, { style: "font-size:13px;margin-bottom:8px;color:var(--t);" });
+
+        const ta = el("textarea", "", iBox, { class: "jc-textarea", style: "min-height:auto !important; resize:none !important; overflow:hidden;" });
+        ta.value = ans;
+        attachAutoResize(ta, 10);
+        const mRow = elTxt("div", "W: 0 | C: 0", iBox, { style: "font-size:11px;color:#6b7280;margin-top:4px;text-align:right;font-family:monospace;" });
+        vState.push({ ta, mRow, qEl });
+      });
+
+      if (mCount === 0) {
+        elTxt("div", "No matching questions found in JSON.", listC, { style: "padding:20px;text-align:center;" });
+      }
+
+      const updateRow = (ta, mRow) => {
+        const val = ta.value.trim();
+        const w = val ? val.split(/\s+/).length : 0;
+        mRow.textContent = "W: " + w + " | C: " + val.length;
+      };
+
+      vState.forEach(v => {
+        v.ta.addEventListener("input", () => updateRow(v.ta, v.mRow));
+        updateRow(v.ta, v.mRow);
+      });
+
+      const actBot = el("div", "", modal, { class: "jc-actions" });
+      const injBtn = elTxt("button", "Approve & Inject (" + mCount + ")", actBot, { class: "jc-btn jc-btn-success" });
+      injBtn.onclick = () => {
+        let inj = 0;
+        vState.forEach(v => {
+          inj += Ext.injAns(v.qEl, v.ta.value);
+        });
+        alert("Success! Auto-filled " + inj + " matching elements on page.");
+        closeModal();
+      };
+      elTxt("button", "Cancel", actBot, { class: "jc-btn jc-btn-ghost" }).onclick = closeModal;
+    } catch (e) {
+      alert("Unable to parse payload. Please copy the exact JSON block and try again.");
+    }
+  };
+
+  const injectAnswers = (jsonStr) => {
+    try {
+      const data = JSON.parse(jsonStr);
+      let count = 0;
+      document.querySelectorAll(".supplementary-questions .question-item, .box .question-item").forEach((qEl, idx) => {
+        const qKey = Ext.getQKey(qEl, idx);
+        const answer = Ext.getSanitizedAnswer(data, qKey);
+        if (!answer) return;
+
+        count += Ext.injAns(qEl, answer);
+      });
+      alert("Success! Auto-filled " + count + " fields. Please review visually before submitting.");
+      closeModal();
+    } catch (e) {
+      alert("Unable to parse payload. Please copy the exact JSON block from your AI Co-Pilot and try again.");
+    }
+  };
+
+  const isL = document.querySelector(".list-item");
+  if (u.includes("/apply/questions")) {
+    const q = document.querySelectorAll(".supplementary-questions .question-item, .box .question-item");
+    if (q.length === 0) return alert("We couldn't find any supplemental questions. Please ensure you are on the Application Questions step.");
+    const c = el("div", "", null, { class: "jc-flex-col" });
+    const ta = el("textarea", "", c, { class: "jc-textarea", readonly: true, style: "flex:1;resize:none;overflow-y:auto;" });
+    const sQ = new Set();
+    let extQ = Array.prototype.reduce.call(q, (acc, item, i) => {
+      const qKey = Ext.getQKey(item, i);
+      if (sQ.has(qKey)) return acc;
+      sQ.add(qKey);
+      const txt = Ext.getQText(item);
+      let ops = [...item.querySelectorAll("ul > li, .radio-set label, select option")]
+        .map(l => norm(l.textContent))
+        .filter(x => x && !x.includes("Select one") && !x.includes("Choose option"));
+      acc.push(qKey + ": " + txt + (ops.length ? "\n - " + ops.join("\n - ") : ""));
+      return acc;
+    }, []);
+
+    ta.value = "### APPLICATION QUESTIONS\n\n" + extQ.join("\n\n");
+    initUI("Supplemental Questionnaire Extractor", "Copy these questions into your AI Career Co-Pilot, or click Auto-Fill once your answers are ready.", c, () => ta.value, [
+      {
+        text: "Auto-Fill Answers",
+        class: "jc-btn-success",
+        action: () => {
+          const wrap = el("div", "", null, { class: "jc-flex-col" });
+          const injTa = el("textarea", "", wrap, { class: "jc-textarea", style: "flex:1;resize:none;overflow-y:auto;", placeholder: "{\n  \"Q01\": \"Yes\",\n  \"Q02\": \"In my role as...\"\n}" });
+          initUI("Auto-Fill Application", "Paste the JSON block generated by your AI Career Co-Pilot below:", wrap, null, [
+            { text: "Verify Payload", action: (m) => verifyPayload(injTa.value, m) },
+            { text: "Execute Auto-Fill", action: () => injectAnswers(injTa.value) }
+          ]);
+        }
+      }
+    ]);
+  } else if (u.includes("/apply/work") || u.includes("/profile") || document.querySelector(".work-tab")) {
+    const wData = Ext.w();
+    if (!wData) return alert("We couldn't find any work experience data on this page. Please ensure your work history entries are visible.");
+    const c = el("div", "", null, { class: "jc-flex-col" });
+    const ta = el("textarea", "", c, { class: "jc-textarea", readonly: true, style: "flex:1;resize:none;overflow-y:auto;" });
+    ta.value = "### EXTRACTED WORK EXPERIENCE\n\n" + wData;
+    initUI("Work History Extractor", "Copy and paste this into your AI Career Co-Pilot to align your work history.", c, () => ta.value);
+  } else if (document.querySelector("#details-info") || document.querySelector(".box-container dl")) {
+    const d = Ext.d();
+    const has = { m: !!d.t && d.t !== "[Title]", d: !!d.ds, q: !!d.q };
+    const active = { m: has.m, d: has.d, q: has.q };
+    if (!has.m && !has.d && !has.q) return alert("We couldn't find any job data. Please navigate to a valid job description page and try again.");
+
+    const c = el("div", "", null, { class: "jc-flex-col" });
+    const rw = el("div", "", c, { class: "jc-toggles", style: "flex-shrink:0;" });
+    const ta = el("textarea", "", c, { class: "jc-textarea", readonly: true, style: "flex:1;resize:none;overflow-y:auto;" });
+
+    const gTxt = () => {
+      const wanted = [
+        "Pay Group", "Salary", "Job Type", "Department", "Division", "Location",
+        "City", "Union", "Closing Date", "Contact Name", "Contact Email"
+      ];
+      const mStr = active.m && has.m && wanted.reduce((ms, k) => {
+        const mk = Object.keys(d.meta).find(x => x.includes(k));
+        return mk && d.meta[mk] ? `${ms}\n**${k}:** ${d.meta[mk]}` : ms;
+      }, `### JOB METADATA\n**Title:** ${d.t}\n**Company:** ${d.c}`);
+      return [
+        mStr,
+        active.d && has.d && `### DESCRIPTION\n${d.ds}`,
+        active.q && has.q && `### APPLICATION QUESTIONS\n${d.q}`
+      ].filter(Boolean).join("\n\n---\n\n");
+    };
+
+    const mkP = (k, l) => {
+      if (!has[k]) return;
+      const p = elTxt("div", l, rw, { class: "jc-pill", "data-active": active[k] ? "true" : "false" });
+      p.onclick = () => {
+        active[k] = !active[k];
+        p.setAttribute("data-active", active[k] ? "true" : "false");
+        ta.value = gTxt();
+      };
+    };
+
+    mkP("m", "Metadata");
+    mkP("d", "Description");
+    mkP("q", "Questions");
+    ta.value = gTxt();
+    initUI("Job Data Extractor", "Toggle sections below and click Copy Payload to send to your AI Co-Pilot.", c, gTxt);
+  } else if (isL) {
+    const topWrap = el("div", "", null, { style: "display:flex;flex-direction:column;gap:12px;" });
+    const searchRow = el("div", "", topWrap, { style: "display:flex;gap:10px;align-items:center;" });
+    const kwInp = el("input", "", searchRow, { class: "jc-textarea", style: "min-height:auto;padding:10px;flex:1;", placeholder: "Optional: Keyword filter inside full job text (e.g., SQL, audit, logistics)" });
+    const pagesWrap = el("div", "", searchRow, { style: "display:flex;align-items:center;gap:8px;" });
+    elTxt("span", "Pages:", pagesWrap, { style: "font-size:13px;font-weight:600;" });
+    const pagesInp = el("input", "", pagesWrap, { type: "number", class: "jc-textarea", style: "min-height:auto;padding:10px;width:60px;", value: "1", min: "1", max: "50" });
+
+    const advWrap = el("details", "", topWrap, { style: "background:#f8fafc;padding:12px;border-radius:6px;border:1px solid #e2e8f0;font-size:13px;" });
+    elTxt("summary", "Advanced Exclusions", advWrap, { style: "font-weight:600;cursor:pointer;color:#0284c7;outline:none;" });
+    const togWrap = el("div", "", advWrap, { style: "display:flex;flex-direction:column;gap:8px;margin-top:10px;" });
+    const rmLbl = el("label", "<input type='checkbox' checked> Exclude Non-Remote (Keep Telework / Home HQ)", togWrap, { style: "display:flex;align-items:center;gap:6px;cursor:pointer;" });
+    const rmCb = rmLbl.querySelector("input");
+    const lgLbl = el("label", "<input type='checkbox'> Exclude Local Government", togWrap, { style: "display:flex;align-items:center;gap:6px;cursor:pointer;" });
+    const lgCb = lgLbl.querySelector("input");
+    const seasLbl = el("label", "<input type='checkbox'> Exclude Seasonal / Temporary", togWrap, { style: "display:flex;align-items:center;gap:6px;cursor:pointer;" });
+    const seasCb = seasLbl.querySelector("input");
+
+    initUI("Batch Job Scanner", "Scan multiple Commonwealth job listings at once to find Direct Fits and Creative Pivots.", topWrap, null, [
+      {
+        text: "Scan Jobs",
+        action: async (mo) => {
+          const options = { kw: kwInp.value.trim(), maxP: parseInt(pagesInp.value) || 1, exNonRemote: rmCb.checked, exLG: lgCb.checked, exSeas: seasCb.checked };
+          mo.innerHTML = "";
+          elTxt("h2", "Batch Job Scanner", mo, { class: "jc-header" });
+          const pe = el("div", "Initializing scan...", mo, { class: "jc-progress" });
+
+          const dt = await Ext.l(options, (c, t, n) => {
+            if (t === 0) {
+              pe.innerHTML = esc(n) + "<br><span style=\"font-size:12px\">Loading more jobs...</span>";
+            } else {
+              pe.innerHTML = "Fetching Job " + Number(c) + " of " + Number(t) + "...<br><span style=\"font-size:12px\">" + esc(n) + "</span>";
+            }
+          });
+
+          const store = assignLabels(dt.m.map(x => ({ jobId: x.jobId, title: x.ti, url: x.ln })));
+          dt.m.forEach(x => { x.label = store.jobs[x.jobId].label; });
+          if (dt.reachedEnd) gcLabelStore(new Set(dt.allJobIds));
+
+          renderResultsList(dt);
+        }
+      }
+    ]);
+  } else {
+    alert("No supported NEOGOV data structure detected on this page. Navigate to a PA job search list, job posting, work history tab, or application questionnaire page and click the bookmarklet again.");
+  }
+})();
