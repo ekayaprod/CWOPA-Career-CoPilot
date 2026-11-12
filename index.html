@@ -12,12 +12,15 @@
       --slate-800: #1e293b;
       --slate-700: #334155;
       --slate-600: #475569;
+      --slate-500: #64748b;
       --slate-300: #cbd5e1;
       --slate-200: #e2e8f0;
       --slate-100: #f1f5f9;
-      --accent: #0284c7;
-      --accent-hover: #0369a1;
+      /* AA-compliant sky-blue accent (#0369a1 = 5.93:1 on white, 5.65:1 on #f8fafc) */
+      --accent: #0369a1;
+      --accent-hover: #075985;
       --accent-light: #38bdf8;
+      --accent-soft: #e0f2fe;
     }
     * { box-sizing: border-box; }
     body {
@@ -26,7 +29,7 @@
       background-color: var(--bg);
       color: var(--slate-900);
       font-size: 16px;
-      line-height: 1.55;
+      line-height: 1.5;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
@@ -45,7 +48,7 @@
     }
 
     .container {
-      max-width: 920px;
+      max-width: 960px;
       width: 100%;
       margin: 0 auto;
       padding: 0 16px;
@@ -57,7 +60,7 @@
       border-bottom: 1px solid var(--slate-200);
       font-size: 14px;
       color: var(--slate-600);
-      padding: 7px 16px;
+      padding: 6px 16px;
       text-align: center;
     }
 
@@ -67,7 +70,7 @@
       border-bottom: 1px solid var(--slate-200);
     }
     .app-header-inner {
-      height: 54px;
+      height: 50px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -80,9 +83,9 @@
       min-width: 0;
     }
     .logo-tile {
-      width: 30px;
-      height: 30px;
-      border-radius: 7px;
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
       background: var(--accent);
       color: #ffffff;
       display: flex;
@@ -101,64 +104,65 @@
     .portal-link {
       font-size: 14px;
       font-weight: 600;
-      color: var(--slate-700);
+      color: var(--accent);
       text-decoration: none;
       white-space: nowrap;
     }
     .portal-link:hover {
-      color: var(--accent);
+      color: var(--accent-hover);
+      text-decoration: underline;
     }
 
-    /* Dark slate hero band */
+    /* Dark slate hero band (compact so setup cards sit high on mobile) */
     .hero-band {
       background: var(--slate-900);
       color: #ffffff;
-      padding: 36px 0 32px;
+      padding: 26px 0 24px;
       border-bottom: 1px solid var(--slate-800);
+    }
+    @media (min-width: 640px) {
+      .hero-band { padding: 34px 0 30px; }
     }
     .hero-inner {
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 10px;
     }
     .hero-band h1 {
-      font-size: clamp(24px, 3.8vw, 34px);
+      font-size: clamp(22px, 3.6vw, 32px);
       line-height: 1.2;
       color: #ffffff;
-      max-width: 28ch;
     }
     .hero-lead {
-      font-size: 16px;
+      font-size: 15px;
       color: var(--slate-300);
-      max-width: 64ch;
+      max-width: 72ch;
+      line-height: 1.5;
     }
-    .hero-before {
-      font-size: 14px;
-      color: var(--slate-300);
-      border-top: 1px solid var(--slate-800);
-      padding-top: 12px;
-      margin-top: 2px;
-      max-width: 68ch;
-    }
-    .hero-before strong {
-      color: var(--accent-light);
+    @media (min-width: 640px) {
+      .hero-lead { font-size: 16px; }
     }
 
     main {
       flex: 1;
-      padding: 28px 0 56px;
+      padding: 24px 0 56px;
       display: flex;
       flex-direction: column;
-      gap: 44px;
+      gap: 40px;
     }
 
     /* Two-card equal-weight setup grid (only white card surfaces on page) */
+    .setup-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
     .setup-grid {
       display: grid;
       grid-template-columns: 1fr;
       gap: 16px;
     }
-    @media (min-width: 720px) {
+    @media (min-width: 740px) {
       .setup-grid {
         grid-template-columns: 1fr 1fr;
       }
@@ -167,7 +171,7 @@
       background: var(--surface);
       border: 1px solid var(--slate-200);
       border-radius: 10px;
-      padding: 22px;
+      padding: 20px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
@@ -176,7 +180,7 @@
     .card-top {
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 8px;
     }
     .part-kicker {
       font-size: 14px;
@@ -188,13 +192,24 @@
       color: var(--slate-900);
     }
     .card-desc {
-      font-size: 15px;
+      font-size: 14px;
       color: var(--slate-600);
+      line-height: 1.5;
+    }
+    .feature-list {
+      padding-left: 18px;
+      font-size: 14px;
+      color: var(--slate-700);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
     }
     .card-actions {
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 10px;
+      border-top: 1px solid var(--slate-100);
+      padding-top: 14px;
     }
     .btn-primary,
     .drag-pill {
@@ -205,7 +220,7 @@
       color: #ffffff;
       font-weight: 600;
       font-size: 15px;
-      min-width: 210px;
+      min-width: 215px;
       padding: 10px 18px;
       border-radius: 7px;
       border: 1px solid var(--accent-hover);
@@ -251,17 +266,21 @@
       background: var(--slate-100);
       color: var(--slate-900);
     }
-    .manual-details {
+    .card-details {
       font-size: 14px;
       color: var(--slate-600);
     }
-    .manual-details summary {
+    .card-details summary {
       font-weight: 600;
       color: var(--slate-900);
       cursor: pointer;
     }
+    .details-body {
+      margin-top: 6px;
+      line-height: 1.5;
+    }
     .manual-steps {
-      margin-top: 8px;
+      margin-top: 6px;
       padding-left: 18px;
       display: flex;
       flex-direction: column;
@@ -292,10 +311,16 @@
       font-family: monospace;
       font-size: 14px;
     }
-    .touch-only-line {
+    .touch-only-note {
       display: none;
-      font-size: 15px;
+      font-size: 14px;
       color: var(--slate-600);
+      padding-top: 4px;
+    }
+    .before-start-line {
+      font-size: 14px;
+      color: var(--slate-600);
+      padding: 0 4px;
     }
 
     /* Section Headers */
@@ -316,7 +341,7 @@
       color: var(--slate-600);
     }
 
-    /* Plain Numbered Steps List with Thin Rules */
+    /* Concise 4-Step List with Thin Rules */
     .steps-list {
       list-style: none;
       padding: 0;
@@ -325,20 +350,20 @@
     }
     .step-row {
       display: grid;
-      grid-template-columns: 32px 1fr;
+      grid-template-columns: 28px 1fr;
       gap: 12px;
-      padding: 18px 0;
+      padding: 13px 0;
       border-bottom: 1px solid var(--slate-200);
       align-items: baseline;
     }
     @media (min-width: 640px) {
       .step-row {
-        grid-template-columns: 40px 1fr;
-        gap: 16px;
+        grid-template-columns: 34px 1fr;
+        gap: 14px;
       }
     }
     .step-numeral {
-      font-size: 22px;
+      font-size: 19px;
       font-weight: 800;
       color: var(--accent);
       line-height: 1;
@@ -346,41 +371,82 @@
     .step-content {
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 3px;
     }
     .step-title {
-      font-size: 17px;
+      font-size: 16px;
       color: var(--slate-900);
     }
     .step-body {
       font-size: 15px;
       color: var(--slate-600);
-      max-width: 68ch;
     }
     .shortcut-note {
       font-size: 14px;
       color: var(--slate-600);
-      padding-top: 2px;
-    }
-    .shortcut-sublist {
-      padding-left: 20px;
-      margin-top: 4px;
-      font-size: 14px;
-      color: var(--slate-600);
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
     }
 
-    /* Demo Section (Plain quote blocks + thin-rule rows) */
+    /* Redesigned Pitch & Creative Pivots Section:
+       1) 6-Track Scannable Pivot Matrix (all visible at once, thin-rule rows)
+       2) Interactive Before/After Rubric Pitch Bar */
+    .pivot-matrix {
+      display: grid;
+      grid-template-columns: 1fr;
+      border-top: 1px solid var(--slate-200);
+    }
+    @media (min-width: 720px) {
+      .pivot-matrix {
+        grid-template-columns: 1fr 1fr;
+        column-gap: 32px;
+      }
+    }
+    .matrix-row {
+      padding: 12px 0;
+      border-bottom: 1px solid var(--slate-200);
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .matrix-from {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--slate-900);
+    }
+    .matrix-bridge {
+      font-size: 14px;
+      color: var(--slate-600);
+    }
+    .matrix-targets {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    .pitch-preview {
+      margin-top: 22px;
+      padding-top: 18px;
+      border-top: 1px solid var(--slate-300);
+    }
+    .pitch-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .pitch-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--slate-900);
+    }
     .persona-tabs {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
-      margin: 12px 0 18px;
+      gap: 6px;
     }
     .pivot-btn {
-      padding: 7px 14px;
+      padding: 6px 12px;
       border-radius: 6px;
       font-size: 14px;
       font-weight: 600;
@@ -389,26 +455,24 @@
       background: var(--surface);
       color: var(--slate-900);
     }
+    .pivot-btn:hover {
+      background: var(--slate-100);
+    }
     .pivot-btn[aria-pressed="true"] {
       background: var(--accent);
       color: #ffffff;
       border-color: var(--accent-hover);
     }
-    .demo-grid {
+    .pitch-compare {
       display: grid;
       grid-template-columns: 1fr;
-      gap: 24px;
-      align-items: start;
+      gap: 16px;
     }
-    @media (min-width: 768px) {
-      .demo-grid {
-        grid-template-columns: 5fr 7fr;
+    @media (min-width: 720px) {
+      .pitch-compare {
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
       }
-    }
-    .demo-quotes {
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
     }
     .demo-label {
       font-size: 14px;
@@ -418,54 +482,16 @@
       margin-bottom: 4px;
     }
     .demo-quote {
-      font-size: 15px;
+      font-size: 14px;
       color: var(--slate-600);
       border-left: 3px solid var(--slate-300);
       padding: 4px 0 4px 12px;
     }
     .demo-quote-upgraded {
-      font-size: 15px;
+      font-size: 14px;
       color: var(--slate-900);
       border-left: 3px solid var(--accent);
       padding: 4px 0 4px 12px;
-    }
-    .match-rows {
-      display: flex;
-      flex-direction: column;
-      border-top: 1px solid var(--slate-200);
-    }
-    .match-row {
-      padding: 12px 0;
-      border-bottom: 1px solid var(--slate-200);
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-    .match-top {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: baseline;
-      justify-content: space-between;
-      gap: 8px;
-    }
-    .match-title {
-      font-weight: 700;
-      font-size: 15px;
-      color: var(--slate-900);
-    }
-    .match-type-pivot {
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--accent);
-    }
-    .match-type-direct {
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--slate-600);
-    }
-    .match-why {
-      font-size: 14px;
-      color: var(--slate-600);
     }
 
     /* Footer */
@@ -488,12 +514,12 @@
       gap: 16px;
     }
 
-    /* Touch device adjustments: Part 2 shrinks to one plain line; desktop step shortcuts hide */
+    /* Touch devices: hide the desktop bookmark card and show a single muted line inside Card 1 */
     @media (hover: none) and (pointer: coarse) {
       .desktop-only {
         display: none !important;
       }
-      .touch-only-line {
+      .touch-only-note {
         display: block !important;
       }
     }
@@ -511,7 +537,7 @@
     <div class="container app-header-inner">
       <div class="brand">
         <div class="logo-tile" aria-hidden="true">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
             <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
           </svg>
@@ -527,12 +553,9 @@
   <!-- Dark slate hero band -->
   <section class="hero-band">
     <div class="container hero-inner">
-      <h1>Your past work fits more PA state jobs than you think.</h1>
+      <h1>Pitch your real experience for the PA state job you want.</h1>
       <p class="hero-lead">
-        State job postings use unfamiliar titles that hide how well retail, warehouse, office, medical, and food-service skills fit. You do not need government experience or a polished resume.
-      </p>
-      <p class="hero-before">
-        <strong>Before you start:</strong> Remove your street address and phone number before uploading a resume. The prompt tells the AI never to invent experience, and you confirm every fact.
+        Whether you are crossing over from a private-sector office, making a mid-career switch, or moving up inside state government without a straight-line departmental ladder, HR grades strictly against each posting's rubric. These two tools help you map your past work to the requirements and write high-scoring application answers backed by real facts.
       </p>
     </div>
   </section>
@@ -540,77 +563,99 @@
   <main class="container">
 
     <!-- Setup section directly under the hero: two cards side by side, equal weight -->
-    <section id="bookmark-setup" class="setup-grid">
+    <section id="bookmark-setup" class="setup-wrap">
+      <div class="setup-grid">
 
-      <!-- Part 1: Job Helper Prompt (any device) -->
-      <div class="setup-card">
-        <div class="card-top">
-          <span class="part-kicker">Part 1 &middot; Any device</span>
-          <h2>Job Helper Prompt</h2>
-          <p class="card-desc">
-            Copy these instructions and paste them into a free AI chat as your first message.
-          </p>
-        </div>
-        <div class="card-actions">
-          <button type="button" id="copyPromptBtn" class="copy-prompt-btn btn-primary" aria-live="polite">
-            Copy Job Helper Prompt
-          </button>
-          <div class="ai-links-row">
-            <span>Open a chat:</span>
-            <a href="https://chatgpt.com/" target="_blank" rel="noopener noreferrer" class="ai-btn">ChatGPT &nearr;</a>
-            <a href="https://gemini.google.com/" target="_blank" rel="noopener noreferrer" class="ai-btn">Gemini &nearr;</a>
-            <a href="https://claude.ai/" target="_blank" rel="noopener noreferrer" class="ai-btn">Claude &nearr;</a>
+        <!-- Card 1: Job Helper Prompt (Any device) -->
+        <div class="setup-card">
+          <div class="card-top">
+            <span class="part-kicker">Any device &middot; Required</span>
+            <h2>Job Helper Prompt</h2>
+            <p class="card-desc">
+              Unlike a blank AI chat that guesses at state rules or invents resume fluff, this prompt is engineered around PA Minimum Experience &amp; Training (MET) rubrics:
+            </p>
+            <ul class="feature-list">
+              <li>Checks promotion gates, civil-service status, and non-obvious <strong>Job Category</strong> filters.</li>
+              <li>Interviews you to surface real examples for the highest grade you honestly qualify for.</li>
+              <li>Enforces a 7-level independence scale with zero invented experience.</li>
+            </ul>
+          </div>
+          <div class="card-actions">
+            <button type="button" id="copyPromptBtn" class="copy-prompt-btn btn-primary" aria-live="polite">
+              Copy Job Helper Prompt
+            </button>
+            <div class="ai-links-row">
+              <span>Paste into:</span>
+              <a href="https://chatgpt.com/" target="_blank" rel="noopener noreferrer" class="ai-btn">ChatGPT &nearr;</a>
+              <a href="https://gemini.google.com/" target="_blank" rel="noopener noreferrer" class="ai-btn">Gemini &nearr;</a>
+              <a href="https://claude.ai/" target="_blank" rel="noopener noreferrer" class="ai-btn">Claude &nearr;</a>
+            </div>
+            <details class="card-details">
+              <summary>Save it in Claude, ChatGPT, or Gemini for future applications</summary>
+              <p class="details-body">
+                Save the prompt alongside your resume inside a <a href="https://support.claude.com/en/articles/9517075-what-are-projects" target="_blank" rel="noopener noreferrer">Claude Project</a>, <a href="https://help.openai.com/en/articles/10169521-projects-in-chatgpt" target="_blank" rel="noopener noreferrer">ChatGPT Project</a>, or <a href="https://support.google.com/gemini/answer/15236321?hl=en" target="_blank" rel="noopener noreferrer">Gemini Gem</a> so your AI remembers your background across every job you target.
+              </p>
+            </details>
+            <p class="touch-only-note">
+              Open this page on a computer for the optional <strong>PA Jobs Bookmark</strong>.
+            </p>
           </div>
         </div>
+
+        <!-- Card 2: PA Jobs Bookmark (Computer - Optional) -->
+        <div class="setup-card desktop-only">
+          <div class="card-top">
+            <span class="part-kicker">Computer &middot; Optional</span>
+            <h2>PA Jobs Bookmark</h2>
+            <p class="card-desc">
+              A browser bookmarklet that runs directly on <code>governmentjobs.com</code> with no extension to install:
+            </p>
+            <ul class="feature-list">
+              <li><strong>Batch Scanner:</strong> Scans a page of search results at once and flags eligibility gates.</li>
+              <li><strong>Question &amp; History Grabber:</strong> Pulls tagged <code>Q01..Qnn</code> questions and saved NEOGOV work history.</li>
+              <li><strong>Answer Checker &amp; Auto-Fill:</strong> Checks character limits, required fields, and AI tells before filling the form.</li>
+            </ul>
+          </div>
+          <div class="card-actions">
+            <p class="card-desc">
+              Show your Bookmarks Bar (<kbd>Ctrl+Shift+B</kbd> or <kbd>Cmd+Shift+B</kbd>) and drag this button up to it:
+            </p>
+            <a id="heroBookmarkletLink" href="#bookmark-setup" draggable="true" title="Drag this button to your Bookmarks Bar" class="drag-pill" aria-live="polite">PA Jobs Bookmark</a>
+
+            <details class="card-details">
+              <summary>Can't drag? Copy code for manual setup</summary>
+              <ol class="manual-steps">
+                <li>Click <strong>Copy PA Jobs Bookmark Code</strong> below.</li>
+                <li>Right-click your Bookmarks Bar and choose <strong>Add page</strong> or <strong>Add bookmark</strong>.</li>
+                <li>Name it <strong>PA Jobs Bookmark</strong>, paste the code into the <strong>URL / Address</strong> box, and save.</li>
+              </ol>
+              <button type="button" id="copyBmBtn" class="copy-bm-btn btn-secondary" aria-live="polite">
+                Copy PA Jobs Bookmark Code
+              </button>
+            </details>
+          </div>
+        </div>
+
       </div>
 
-      <!-- Part 2: PA Jobs Bookmark (computer) -->
-      <div class="setup-card">
-        <div class="card-top">
-          <span class="part-kicker">Part 2 &middot; Computer</span>
-          <h2>PA Jobs Bookmark</h2>
-          <p class="card-desc desktop-only">
-            Show your Bookmarks Bar (<kbd>Ctrl+Shift+B</kbd> or <kbd>Cmd+Shift+B</kbd>) and drag this button up to it to scan job lists and auto-fill forms:
-          </p>
-          <p class="touch-only-line">
-            Open this page on a computer for the PA Jobs Bookmark.
-          </p>
-        </div>
-        <div class="card-actions desktop-only">
-          <a id="heroBookmarkletLink" href="#bookmark-setup" draggable="true" title="Drag this button to your Bookmarks Bar" class="drag-pill" aria-live="polite">PA Jobs Bookmark</a>
-
-          <details class="manual-details">
-            <summary>Can't drag? Copy code for manual setup</summary>
-            <ol class="manual-steps">
-              <li>Click <strong>Copy PA Jobs Bookmark Code</strong> below.</li>
-              <li>Right-click your Bookmarks Bar and choose <strong>Add page</strong> or <strong>Add bookmark</strong>.</li>
-              <li>Name it <strong>PA Jobs Bookmark</strong>, paste the code into the <strong>URL / Address</strong> box, and save.</li>
-            </ol>
-            <button type="button" id="copyBmBtn" class="copy-bm-btn btn-secondary" aria-live="polite">
-              Copy PA Jobs Bookmark Code
-            </button>
-          </details>
-        </div>
-      </div>
-
+      <p class="before-start-line">
+        <strong>Before you start:</strong> Remove your street address and phone number before uploading a resume. The prompt tells the AI never to invent experience, and you confirm every fact.
+      </p>
     </section>
 
-    <!-- The four steps: plain numbered list with thin rules -->
+    <!-- Concise 4-Step Workflow -->
     <section>
       <div class="section-head">
         <h2>How the Workflow Goes</h2>
-        <p>
-          Here is how to go from your past work history to a completed state application, one step at a time.
-        </p>
       </div>
 
       <ol class="steps-list">
         <li class="step-row">
           <span class="step-numeral">1</span>
           <div class="step-content">
-            <h3 class="step-title">Tell the AI About Your Past Work</h3>
+            <h3 class="step-title">Load your background</h3>
             <p class="step-body">
-              After pasting the Job Helper Prompt into your chat, upload your resume or describe your past jobs in plain sentences. The AI translates your everyday tasks into state hiring terms and suggests which <strong>Job Categories</strong> to check on the PA portal.
+              Paste the <strong>Job Helper Prompt</strong> into your AI chat and share your resume or work history to get tailored PA <strong>Job Category</strong> filters.
             </p>
           </div>
         </li>
@@ -618,12 +663,10 @@
         <li class="step-row">
           <span class="step-numeral">2</span>
           <div class="step-content">
-            <h3 class="step-title">Find &amp; Compare Job Openings</h3>
+            <h3 class="step-title">Compare openings</h3>
             <p class="step-body">
-              Filter the <a href="https://www.governmentjobs.com/careers/pabureau" target="_blank" rel="noopener noreferrer">PA State Jobs Portal &nearr;</a> using those categories, then copy and paste postings into your chat so the AI can check the minimum requirements and help you pick the best opening.
-            </p>
-            <p class="shortcut-note desktop-only">
-              <strong>Computer shortcut:</strong> Click <a href="#bookmark-setup">PA Jobs Bookmark</a> on a search results page to scan the whole list at once.
+              Filter the <a href="https://www.governmentjobs.com/careers/pabureau" target="_blank" rel="noopener noreferrer">PA State Jobs Portal &nearr;</a> and paste postings into your chat so the AI can check minimum requirements and rank your best options.
+              <span class="shortcut-note desktop-only"><strong>Computer shortcut:</strong> Click <a href="#bookmark-setup">PA Jobs Bookmark</a> on a search results page to scan the list at once.</span>
             </p>
           </div>
         </li>
@@ -631,12 +674,10 @@
         <li class="step-row">
           <span class="step-numeral">3</span>
           <div class="step-content">
-            <h3 class="step-title">Answer the Job Questions</h3>
+            <h3 class="step-title">Build your pitch on the Job Questions</h3>
             <p class="step-body">
-              Open the job posting you want to apply for and share both the posting and its <strong>Job Questions</strong> (found on the posting's <strong>Questions</strong> tab or on the application's questions step). On many postings, your answers to these questions determine whether you qualify and how your application is scored. The AI asks you follow-up questions to pull out real details from your past work so your answers earn the highest score you honestly qualify for.
-            </p>
-            <p class="shortcut-note desktop-only">
-              <strong>Computer shortcut:</strong> Click <a href="#bookmark-setup">PA Jobs Bookmark</a> on the job posting or application questions page to copy all questions at once.
+              Share the posting and its <strong>Job Questions</strong> (from the posting's <strong>Questions</strong> tab or the application step); the AI interviews you for concrete details from your past work to draft answers for the highest score you honestly qualify for.
+              <span class="shortcut-note desktop-only"><strong>Computer shortcut:</strong> Click <a href="#bookmark-setup">PA Jobs Bookmark</a> on the posting or questions page to copy all questions at once.</span>
             </p>
           </div>
         </li>
@@ -644,42 +685,86 @@
         <li class="step-row">
           <span class="step-numeral">4</span>
           <div class="step-content">
-            <h3 class="step-title">Check &amp; Fill Out Your Application</h3>
+            <h3 class="step-title">Check &amp; fill the application</h3>
             <p class="step-body">
-              Read over every drafted answer in your chat to make sure it is accurate, then copy and paste your approved answers into the application form.
+              Review your drafted answers for accuracy and paste them into the form.
+              <span class="shortcut-note desktop-only"><strong>Computer shortcut:</strong> On the Questions page, click <strong>PA Jobs Bookmark &rarr; Auto-Fill Answers</strong>, paste the chat's auto-fill code, click <strong>Check Answers (Recommended)</strong>, then click <strong>Approve &amp; Fill Form</strong>.</span>
             </p>
-            <div class="shortcut-note desktop-only">
-              <strong>Computer shortcut (using the auto-fill code at the end of your chat):</strong>
-              <ol class="shortcut-sublist">
-                <li>On the application's Questions page, click <strong>PA Jobs Bookmark</strong> and choose <strong>Auto-Fill Answers</strong>.</li>
-                <li>Paste the auto-fill code and click <strong>Check Answers (Recommended)</strong> to verify character limits and required fields.</li>
-                <li>Click <strong>Approve &amp; Fill Form</strong>.</li>
-              </ol>
-            </div>
           </div>
         </li>
       </ol>
     </section>
 
-    <!-- Demo: two personas, aria-pressed buttons, facts only from the input -->
+    <!-- Redesigned Non-Linear Pitch & Creative Pivots Section -->
     <section>
       <div class="section-head">
-        <h2>See How "Creative Pivots" Work</h2>
+        <h2>Pitching Non-Linear Experience &amp; "Creative Pivots"</h2>
         <p>
-          In your chat, the AI groups illustrative openings into <strong>Direct Fits</strong> and <strong>Creative Pivots</strong> (state jobs with unfamiliar titles whose day-to-day work matches skills you already have), without adding or exaggerating a single fact.
+          You rarely have a straight-line title match when switching fields or moving across state departments. The helper breaks your past work into underlying mechanics to spot illustrative <strong>Direct Fits</strong> and <strong>Creative Pivots</strong>:
         </p>
       </div>
 
-      <div class="persona-tabs" id="pivotPersonaBtns">
-        <button type="button" data-persona="retail" aria-pressed="true" class="pivot-btn">
-          Retail Shift Supervisor
-        </button>
-        <button type="button" data-persona="medical" aria-pressed="false" class="pivot-btn">
-          Medical Front Desk / Billing Specialist
-        </button>
+      <!-- 6-Track Scannable Pivot Matrix (All visible at a glance) -->
+      <div class="pivot-matrix">
+        <div class="matrix-row">
+          <span class="matrix-from">State Employee (Cross-Series Promotion)</span>
+          <span class="matrix-bridge">Surfaces above-class duties, SOP writing, onboarding, and queue tracking to bridge classification series.</span>
+          <span class="matrix-targets">Targets: Management Analyst 1 &middot; Administrative Officer 1 &middot; Program Analyst</span>
+        </div>
+
+        <div class="matrix-row">
+          <span class="matrix-from">Private-Sector Office &amp; Operations</span>
+          <span class="matrix-bridge">Maps corporate vendor quotes, budget tracking, and project coordination to Commonwealth MET rubrics.</span>
+          <span class="matrix-targets">Targets: Administrative Officer 1 &middot; Purchasing Agent &middot; Management Technician</span>
+        </div>
+
+        <div class="matrix-row">
+          <span class="matrix-from">IT Support &amp; Systems Administration</span>
+          <span class="matrix-bridge">Separates independent troubleshooting and scripting from assisted tasks to maximize technical KSA credit.</span>
+          <span class="matrix-targets">Targets: IT Generalist 1 &middot; Network Specialist 1 &middot; Applications Developer</span>
+        </div>
+
+        <div class="matrix-row">
+          <span class="matrix-from">Medical Front Desk &amp; Insurance Billing</span>
+          <span class="matrix-bridge">Translates patient intake, coverage verification, and denied-claim follow-up into state casework &amp; revenue roles.</span>
+          <span class="matrix-targets">Targets: Income Maintenance Caseworker &middot; UC Claims Interviewer &middot; Tax Collections Tech</span>
+        </div>
+
+        <div class="matrix-row">
+          <span class="matrix-from">Warehouse, Inventory &amp; Dispatch</span>
+          <span class="matrix-bridge">Connects manifest verification, inventory software, and safety checks to state supply and inspection specs.</span>
+          <span class="matrix-targets">Targets: Stock Clerk 3 &middot; Purchasing Agent &middot; Safety Inspector Trainee</span>
+        </div>
+
+        <div class="matrix-row">
+          <span class="matrix-from">Retail &amp; Food-Service Supervision</span>
+          <span class="matrix-bridge">Turns crew scheduling, register balancing, and delivery invoice checks into administrative &amp; procurement credit.</span>
+          <span class="matrix-targets">Targets: Purchasing Agent &middot; Administrative Officer 1 &middot; Liquor Store Manager 1A</span>
+        </div>
       </div>
 
-      <div id="pivotDisplayContainer" class="demo-grid"></div>
+      <!-- Compact Before/After Rubric Pitch Switcher -->
+      <div class="pitch-preview">
+        <div class="pitch-header">
+          <span class="pitch-title">See how it rewords your facts without inventing anything:</span>
+          <div class="persona-tabs" id="pivotPersonaBtns">
+            <button type="button" data-persona="state_promo" aria-pressed="true" class="pivot-btn">
+              State Promotion
+            </button>
+            <button type="button" data-persona="office_ops" aria-pressed="false" class="pivot-btn">
+              Office / Ops
+            </button>
+            <button type="button" data-persona="medical" aria-pressed="false" class="pivot-btn">
+              Medical Billing
+            </button>
+            <button type="button" data-persona="retail" aria-pressed="false" class="pivot-btn">
+              Retail / Warehouse
+            </button>
+          </div>
+        </div>
+
+        <div id="pivotDisplayContainer" class="pitch-compare"></div>
+      </div>
     </section>
 
   </main>
@@ -691,14 +776,14 @@
         <strong>PA State Jobs Helper</strong> (MIT License) &middot; Free helper for <a href="https://www.pa.gov/agencies/employment" target="_blank" rel="noopener noreferrer">Employment.pa.gov</a> applicants
       </div>
       <div class="footer-links">
-        <a id="githubSourceLink" href="https://github.com/PA-State-Jobs-Helper/PA-State-Jobs-Helper" target="_blank" rel="noopener noreferrer">View source on GitHub &nearr;</a>
+        <a id="githubSourceLink" href="https://github.com/ekayaprod/PA-Jobs-Helper" target="_blank" rel="noopener noreferrer">View source on GitHub &nearr;</a>
         <a href="https://www.governmentjobs.com/careers/pabureau" target="_blank" rel="noopener noreferrer">PA State Jobs Portal &nearr;</a>
       </div>
     </div>
   </footer>
 
   <script>
-    const DEFAULT_GITHUB_REPO = "https://github.com/PA-State-Jobs-Helper/PA-State-Jobs-Helper";
+    const DEFAULT_GITHUB_REPO = "https://github.com/ekayaprod/PA-Jobs-Helper";
     const DEFAULT_GITHUB_BRANCH = "main";
     const PROMPT_FILE_PATH = "prompt/CWOPA-Career-CoPilot.md";
     const BOOKMARKLET_FILE_PATH = "bookmarklet/CWOPA-Neogov-Extractor.js";
@@ -708,55 +793,25 @@
     let repoLoadPromise = null;
 
     const PIVOT_PERSONAS = {
-      retail: {
-        role: "Retail Shift Supervisor",
-        rawResume: "I was a shift supervisor over 14 people on the floor. I made the weekly work schedule, opened and closed the registers, calmed down upset customers, and checked the delivery trucks against the paper invoices.",
-        upgradedBullet: "Supervised a 14-person retail floor crew, prepared weekly staff schedules, opened and closed point-of-sale registers, de-escalated customer complaints, and verified incoming vendor deliveries against invoices.",
-        matches: [
-          {
-            title: "Purchasing Agent",
-            type: "Creative Pivot",
-            isPivot: true,
-            why: "Checking delivery trucks against paper invoices lines up with state purchasing and supply verification."
-          },
-          {
-            title: "Administrative Officer 1",
-            type: "Creative Pivot",
-            isPivot: true,
-            why: "Supervising a 14-person crew, making weekly schedules, and calming down upset customers fit office coordination."
-          },
-          {
-            title: "Liquor Store General Manager 1A",
-            type: "Direct Fit",
-            isPivot: false,
-            why: "Directly matches supervising a floor crew, opening and closing registers, and checking vendor deliveries."
-          }
-        ]
+      state_promo: {
+        role: "Current State Employee (Pivoting Series)",
+        rawResume: "I handle IT support tickets and user accounts in Active Directory, but over the past year I also wrote our team's step-by-step onboarding guides, trained 6 new hires, and tracked weekly ticket backlog numbers in Excel for my supervisor.",
+        upgradedBullet: "Administered Active Directory user accounts and resolved support tickets, authored standard operating procedures for staff onboarding, trained 6 new employees, and compiled weekly queue performance reports in Excel."
+      },
+      office_ops: {
+        role: "Private-Sector Office Coordinator",
+        rawResume: "I coordinated office vendor contracts, compared price quotes from 5 suppliers before ordering equipment, reconciled monthly credit card statements against receipts in Excel, and tracked facility repair requests.",
+        upgradedBullet: "Coordinated vendor service contracts, evaluated competitive price quotes across 5 suppliers prior to equipment purchases, reconciled monthly expense statements against receipts in Excel, and tracked facility maintenance requests."
       },
       medical: {
         role: "Medical Front Desk / Billing Specialist",
         rawResume: "I worked the clinic front desk checking people in, looking up whether their insurance covered the visit, typing in the billing codes, calling insurance companies back on denied claims, and keeping patient charts locked up and private.",
-        upgradedBullet: "Completed patient intake at the clinic front desk, verified insurance coverage for visits, entered medical billing codes, followed up with insurers on denied claims, and maintained confidential patient records.",
-        matches: [
-          {
-            title: "Income Maintenance Caseworker",
-            type: "Creative Pivot",
-            isPivot: true,
-            why: "Checking people in, looking up insurance coverage, and keeping charts private match benefit casework."
-          },
-          {
-            title: "Unemployment Compensation Claims Intake Interviewer",
-            type: "Creative Pivot",
-            isPivot: true,
-            why: "Looking up coverage rules and calling insurers back on denied claims carry over to unemployment claims review."
-          },
-          {
-            title: "Tax Account Collections Technician",
-            type: "Creative Pivot",
-            isPivot: true,
-            why: "Typing in billing codes and following up on denied claims translate well to reviewing state tax accounts."
-          }
-        ]
+        upgradedBullet: "Completed patient intake at the clinic front desk, verified insurance coverage for visits, entered medical billing codes, followed up with insurers on denied claims, and maintained confidential patient records."
+      },
+      retail: {
+        role: "Retail / Warehouse Shift Supervisor",
+        rawResume: "I was a shift supervisor over 14 people on the floor. I made the weekly work schedule, opened and closed the registers, calmed down upset customers, and checked the delivery trucks against the paper invoices.",
+        upgradedBullet: "Supervised a 14-person floor crew, prepared weekly staff schedules, opened and closed point-of-sale registers, de-escalated customer complaints, and verified incoming vendor deliveries against invoices."
       }
     };
 
@@ -942,7 +997,7 @@
     }
 
     function renderPivotPersona(key) {
-      const p = PIVOT_PERSONAS[key] || PIVOT_PERSONAS.retail;
+      const p = PIVOT_PERSONAS[key] || PIVOT_PERSONAS.state_promo;
       document.querySelectorAll(".pivot-btn").forEach(btn => {
         const active = btn.getAttribute("data-persona") === key;
         btn.setAttribute("aria-pressed", active ? "true" : "false");
@@ -951,29 +1006,14 @@
       const container = document.getElementById("pivotDisplayContainer");
       if (!container) return;
 
-      const matchesHtml = p.matches.map(m => `
-        <div class="match-row">
-          <div class="match-top">
-            <span class="match-title">${m.title}</span>
-            <span class="${m.isPivot ? "match-type-pivot" : "match-type-direct"}">${m.type}</span>
-          </div>
-          <p class="match-why">${m.why}</p>
-        </div>
-      `).join("");
-
       container.innerHTML = `
-        <div class="demo-quotes">
-          <div>
-            <span class="demo-label">What you might say in chat (${p.role}):</span>
-            <p class="demo-quote">"${p.rawResume}"</p>
-          </div>
-          <div>
-            <span class="demo-label">How it phrases those same facts:</span>
-            <p class="demo-quote-upgraded">"${p.upgradedBullet}"</p>
-          </div>
+        <div>
+          <span class="demo-label">What you tell the AI (${p.role}):</span>
+          <p class="demo-quote">"${p.rawResume}"</p>
         </div>
-        <div class="match-rows">
-          ${matchesHtml}
+        <div>
+          <span class="demo-label">How it pitches those same facts for the rubric:</span>
+          <p class="demo-quote-upgraded">"${p.upgradedBullet}"</p>
         </div>
       `;
     }
@@ -1023,7 +1063,7 @@
         btn.addEventListener("click", () => renderPivotPersona(btn.getAttribute("data-persona")));
       });
 
-      renderPivotPersona("retail");
+      renderPivotPersona("state_promo");
     });
   </script>
 </body>
