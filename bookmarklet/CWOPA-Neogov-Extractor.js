@@ -367,7 +367,8 @@ javascript:(async function() {
           if (idx >= 0 && idx < opts.length && opts.length <= 6) hit = opts[idx];
         }
         if (hit) return { matched: true, target: hit.node, matchedText: hit.text, validOptions: opts.map(o => o.text) };
-      }\n
+      }
+
       if (/^(yes|no)\b/i.test(cleanAns)) {
         const yn = cleanAns.startsWith("yes") ? "yes" : "no";
         hit = opts.find(o => o.text.toLowerCase().startsWith(yn));
