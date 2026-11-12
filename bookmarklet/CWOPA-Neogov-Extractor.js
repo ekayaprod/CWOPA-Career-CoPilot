@@ -1,7 +1,3 @@
-/**
- * PA State Jobs Helper - PA Jobs Bookmark (Scanner, Answer Checker & Auto-Fill)
- * License: MIT
- */
 javascript:(async function() {
   const u = window.location.href;
   if (!u.includes("governmentjobs.com") && !u.includes("pa.gov")) {
