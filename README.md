@@ -1,49 +1,77 @@
-# Commonwealth Career Co-Pilot (CWOPA)
+# PA State Jobs Helper
 
-**Your experience is more transferable than you think.**
+**Your past work fits more PA state jobs than you think.**
 
-The **Commonwealth Career Co-Pilot** is a free, open-source toolkit for people exploring or applying for jobs with the [Commonwealth of Pennsylvania (Employment.pa.gov)](https://www.pa.gov/agencies/employment) on the [NEOGOV / GovernmentJobs portal](https://www.governmentjobs.com/careers/pabureau).
+The **PA State Jobs Helper** is a free, open-source career and application helper for people exploring or applying for jobs with the [Commonwealth of Pennsylvania (Employment.pa.gov)](https://www.pa.gov/agencies/employment) on the [NEOGOV / GovernmentJobs portal](https://www.governmentjobs.com/careers/pabureau).
 
-It pairs a lightweight **Browser Bookmarklet** with a structured **AI Career Co-Pilot Prompt** (compatible with ChatGPT, Google Gemini, and Anthropic Claude) to help you:
+It pairs the **Job Helper Prompt** (for ChatGPT, Google Gemini, or Anthropic Claude) with the **PA Jobs Bookmark** (an optional computer bookmarklet) to walk you through the entire application workflow:
 
-1. **Batch-scan Commonwealth job openings** and filter out non-remote, temporary, or local-government listings in seconds.
-2. **Discover "Creative Pivots"**—state government positions with unfamiliar titles or departments whose actual day-to-day work matches skills you already use in the private sector.
-3. **Translate your work history** into accurate, verifiable language that state HR analysts recognize when grading Minimum Experience and Training (MET) requirements.
-4. **Draft and audit supplemental questionnaire answers** with strict anti-hallucination safeguards, then **auto-fill approved answers** directly back into NEOGOV.
-
----
-
-## Choose Your Starting Path
-
-### Path 1: I'm New Here (Guided Setup)
-New to state government applications or using an AI assistant for job hunting? Follow the step-by-step guide:
-1. **[Start Here: Getting Started Guide](docs/getting-started.md)** — Understand how the two tools work together in 3 minutes.
-2. **[Step 1: Install the Bookmarklet](docs/install-bookmarklet.md)** — Drag the button to your browser's bookmarks bar from our live GitHub Pages site.
-3. **[Step 2: Set Up Your AI Co-Pilot](docs/install-ai-copilot.md)** — Copy the master prompt into [ChatGPT](docs/platforms/chatgpt.md), [Google Gemini](docs/platforms/gemini.md), or [Claude](docs/platforms/claude.md).
-4. **[Step 3: Build Your Experience Profile](docs/building-your-experience-profile.md)** — Start with an existing resume, your NEOGOV profile, or a guided interview.
-5. **[Step 4: Run Your First Job Scan](docs/first-job-search.md)** — Scan 5–10 jobs and learn how to read [Direct Fits vs. Creative Pivots](docs/understanding-results.md).
-6. **[Step 5: Complete an Application](docs/completing-an-application.md)** — Draft verified questionnaire answers and inject them into NEOGOV.
-
-### Path 2: I Already Know What I'm Doing (Quick Access)
-* **Master Prompt (v2.0):** [`prompt/CWOPA-Career-CoPilot.md`](prompt/CWOPA-Career-CoPilot.md)
-* **Bookmarklet Source (v2.0 Hardened):** [`bookmarklet/CWOPA-Neogov-Extractor.js`](bookmarklet/CWOPA-Neogov-Extractor.js)
-* **Minified Bookmarklet URI (Copy-Paste Fallback):** [`bookmarklet/CWOPA-Neogov-Extractor.min.txt`](bookmarklet/CWOPA-Neogov-Extractor.min.txt)
-* **Interactive GitHub Pages Hub:** Open `index.html` (or visit your deployed GitHub Pages URL) for the live draggable bookmarklet button and one-click prompt copy.
+1. **Load Your Experience:** Share your resume or describe past jobs in plain sentences so the AI can translate your everyday skills into state classification terms and recommend which `Job Category` filters to check.
+2. **Find & Compare Openings:** Pull single job postings or scan a page of openings from the PA portal so the AI can check minimum requirements and point out **Direct Fits** and **Creative Pivots** (state jobs with unfamiliar titles whose day-to-day work matches skills you already have).
+3. **Answer the Job Questions:** Share the full job posting and its **Job Questions** (from the posting's **Questions** tab or the logged-in application stage). The AI asks you follow-up questions to pull out real details from your past work and draft answers aimed at the highest score you honestly qualify for.
+4. **Check & Auto-Fill Your Form:** Once you are happy with your answers, use **PA Jobs Bookmark** and the AI's auto-fill code to check character limits and required fields (`Check Answers (Recommended)`) before filling the form (`Approve & Fill Form`).
 
 ---
 
-## Core Safeguards: Accuracy First
+## Repository Structure (5 Core Files)
 
-Unlike generic "resume booster" prompts that invent buzzwords or exaggerate titles, the Commonwealth Career Co-Pilot enforces **Rule 0 (Absolute Accuracy)**:
-* **Zero Fabricated Facts:** Never invents employers, dates, credentials, metrics, or duties.
-* **True Independence Grading:** Distinguishes between *Assisting*, *Performing Independently*, *Leading*, and *Approving* so your application never overclaims authority.
-* **Gated Rubric Awareness:** Separates employer-only experience questions from open-ended questions where volunteer or personal project experience is allowed.
-* **Human-in-the-Loop Auto-Fill:** You review, edit, and verify every answer before the bookmarklet fills any form field on NEOGOV.
+```text
+PA-State-Jobs-Helper/
+├── index.html                           # Single-page GitHub Pages site (auto-loads prompt & bookmarklet from repo)
+├── README.md                            # Setup, workflow, troubleshooting, and privacy guide
+├── LICENSE                              # MIT License
+├── bookmarklet/
+│   └── CWOPA-Neogov-Extractor.js        # PA Jobs Bookmark source (scanner, answer checker, and auto-fill)
+└── prompt/
+    └── CWOPA-Career-CoPilot.md          # Job Helper Prompt
+```
 
-Read our full **[Privacy & Safety Guide](docs/privacy-and-safety.md)** and **[Troubleshooting Guide](docs/troubleshooting.md)**.
+> **Automatic GitHub Pages Sync:** When hosted on GitHub Pages, `index.html` automatically fetches the latest `prompt/CWOPA-Career-CoPilot.md` and `bookmarklet/CWOPA-Neogov-Extractor.js` directly from the repository (and strips code comments to attach a valid `javascript:` URL to the bookmark button in the browser). You can edit either file in GitHub without needing to manually update `index.html`.
+
+---
+
+## How the Workflow Goes
+
+### Step 1: Start Your AI Session & Load Your Experience
+Copy [`prompt/CWOPA-Career-CoPilot.md`](prompt/CWOPA-Career-CoPilot.md) (or click **Copy Job Helper Prompt** on the GitHub Pages site), open [ChatGPT](https://chatgpt.com/), [Google Gemini](https://gemini.google.com/), or [Anthropic Claude](https://claude.ai/), and paste it in. Then upload your resume or describe your past work in a few sentences. The AI will:
+* Translate your day-to-day tasks using its **7-Level Independence Scale**.
+* Suggest **3 to 5 non-obvious `Job Category` filters** to check on the [PA State Jobs Portal](https://www.governmentjobs.com/careers/pabureau).
+
+### Step 2: Scan Job Openings & Choose an Application
+Filter the PA jobs site using those categories and bring postings back to your chat:
+* **On any device:** Copy and paste a job posting directly into the chat.
+* **With PA Jobs Bookmark (on a computer):** Drag the **`PA Jobs Bookmark`** button from the website onto your Bookmarks Bar (`Ctrl + Shift + B` or `Cmd + Shift + B`) and click it on a search results page to scan the openings on that page at once. Open **Filter Options** inside the scanner if you want to restrict results to remote/telework jobs or exclude seasonal roles.
+
+### Step 3: Answer the Job Questions
+Once you pick an opening to apply for, share the full job posting **and its application questions** with the AI:
+* **Where to find the questions:** On the job posting's **Questions** tab, or on the **Questions** step while logged in and applying on NEOGOV (clicking **`PA Jobs Bookmark`** on either page copies them with `Q01..Qnn` tags).
+* **Working through the questions together:** On many postings, your answers to these questions determine whether you qualify and how your application is scored. Instead of guessing, the AI asks targeted follow-up questions to pull out real examples, tools, headcounts, and dates from your experience so your answers earn the highest score you honestly qualify for.
+
+### Step 4: Check & Auto-Fill Your Application Form
+When you are satisfied with all your drafted answers:
+1. Copy the final auto-fill code (`json` block) that the AI provides alongside your plain-text answers.
+2. On the NEOGOV application Questions page (`/apply/questions`), click your **`PA Jobs Bookmark`** and select **Auto-Fill Answers**.
+3. Paste the code and click **Check Answers (Recommended)**. If any required fields or character limits are flagged, click **Copy Fix Request for AI** and paste it back into your chat. Once everything passes, click **Approve & Fill Form** to fill the page in one click.
+
+---
+
+## Troubleshooting
+
+* **Bookmarks Bar is hidden:** Press `Ctrl + Shift + B` (Windows/Linux) or `Cmd + Shift + B` (Mac).
+* **Filtering for Remote / Telework only:** Inside the **PA Jobs Bookmark: Scan Job List** window, open **Filter Options (Remote, Seasonal, Local Gov)** and check *"Show remote/telework jobs only"*. By default, all jobs on the page are scanned so on-site and county roles are included.
+* **Errors or Warnings in `Check Answers`:** The bookmark automatically strips ```` ```json ```` code fences, normalizes quotes/dashes, and matches multiple-choice options by letter grade (`A`, `Level A`, `Yes`) or text. If the checker flags any red `ERR_` or yellow `WARN_` items (such as missing dates/hours or AI writing tells), click **Copy Fix Request for AI** at the bottom of the window and paste that report back into your chat so the AI can repair the flagged questions.
+
+---
+
+## Privacy, Accuracy & Screening Notes
+
+* **Local Browser Execution:** `CWOPA-Neogov-Extractor.js` runs strictly in your browser on the pages you choose to scan. It has no external tracking servers and never accesses your NEOGOV password.
+* **User-Controlled AI Sharing:** Information is only shared with ChatGPT, Gemini, or Claude when you copy and paste text or upload a document. Remove your street address and phone number before uploading a resume.
+* **Rule 0 (Absolute Accuracy):** The prompt instructs the AI never to invent experience, and you confirm every fact. Always read and verify every generated work-history bullet and questionnaire response before submitting your application on NEOGOV.
+* **Commonwealth Screening Variations:** While the prompt models the standard Office of Administration / NEOGOV Minimum Experience and Training (MET) screening workflow, specific procedures vary across classifications, union agreements, exam vs. non-exam tracks, and independent state commissions. See [Employment.pa.gov FAQs](https://www.pa.gov/agencies/employment/how-to-apply/faqs) for official guidance.
 
 ---
 
 ## Disclaimer
 
-*Independent, community-created open-source project. Not affiliated with, endorsed by, or sponsored by the Commonwealth of Pennsylvania, the Pennsylvania Office of Administration, NEOGOV, GovernmentJobs.com, OpenAI, Google, or Anthropic. Users are solely responsible for verifying the accuracy of all information submitted in their employment applications.*
+*Independent, community-created open-source project. Not affiliated with, endorsed by, or sponsored by the Commonwealth of Pennsylvania, the Pennsylvania Office of Administration, NEOGOV, GovernmentJobs.com, OpenAI, Google, or Anthropic.*
